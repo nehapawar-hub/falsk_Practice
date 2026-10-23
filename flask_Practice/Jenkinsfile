@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out the Flask CI/CD repository'
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'python --version'
+                bat 'python -m pip install --upgrade pip'
+                bat 'python -m pip install -r flask_Practice\\requirements.txt'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat 'python -m pip install pytest'
+                bat 'python -m pytest flask_Practice\\test_app.py -v'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                bat 'if not exist staging mkdir staging'
+                bat 'if not exist staging\\flask_Practice mkdir staging\\flask_Practice'
+                bat 'xcopy flask_Practice staging\\flask_Practice /E /I /Y'
+                echo 'Application files copied to the local staging folder.'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'SUCCESS: Flask CI/CD pipeline completed.'
+        }
+        failure {
+            echo 'FAILURE: Check the Jenkins Console Output for details.'
+        }
+        always {
+            echo 'Pipeline execution finished.'
+        }
+    }
+}
